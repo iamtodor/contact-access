@@ -17,7 +17,8 @@ public class MainActivity extends AppCompatActivity {
 
     private static final int PICK_CONTACT = 101;
     public static final String SMS_TO = "smsto:";
-    public static final String SMS_BODY = "sms_body";
+    public static final String SMS_BODY_CODE = "sms_body";
+    public static final String SMS_BODY = "Good Morning ! how r U ?";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,31 +45,35 @@ public class MainActivity extends AppCompatActivity {
         switch (reqCode) {
             case (PICK_CONTACT):
                 if (resultCode == Activity.RESULT_OK) {
-                    Uri contactData = data.getData();
-                    Cursor c = managedQuery(contactData, null, null, null, null);
-                    if (c.moveToFirst()) {
-                        String id = c.getString(c.getColumnIndexOrThrow(ContactsContract.Contacts._ID));
+                    Cursor cursor = getContentResolver().query(ContactsContract.Contacts.CONTENT_URI, null, null, null, null);
+
+                    if (cursor != null && cursor.moveToFirst()){
+                        String id = cursor.getString(cursor.getColumnIndexOrThrow(ContactsContract.Contacts._ID));
 
                         String hasPhone =
-                                c.getString(c.getColumnIndex(ContactsContract.Contacts.HAS_PHONE_NUMBER));
+                                cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts.HAS_PHONE_NUMBER));
 
                         if (hasPhone.equalsIgnoreCase("1")) {
                             Cursor phones = getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null,
                                     ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = " + id, null, null);
-                            phones.moveToFirst();
-                            String cNumber = phones.getString(phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
-                            // Toast.makeText(getApplicationContext(), cNumber, Toast.LENGTH_SHORT).show();
-                            sentSms(cNumber);
+
+                            if(phones != null && phones.moveToFirst()) {
+                                String cNumber = phones.getString(phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
+                                sendSms(cNumber);
+                                phones.close();
+
+                            }
                         }
+                        cursor.close();
                     }
                 }
         }
     }
 
-    private void sentSms(String number) {
+    private void sendSms(String number) {
         Uri sms_uri = Uri.parse(SMS_TO + number);
         Intent sms_intent = new Intent(Intent.ACTION_SENDTO, sms_uri);
-        sms_intent.putExtra(SMS_BODY, "Good Morning ! how r U ?");
+        sms_intent.putExtra(SMS_BODY_CODE, SMS_BODY);
         startActivity(sms_intent);
     }
 

@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Contact access</string>
+    <string name="hello">Good Morning ! how r U, %1$s ?</string>
 </resources>
